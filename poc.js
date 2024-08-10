@@ -1,18 +1,19 @@
 !function() {
   const vert_shader = `
-    attribute vec2 pos;
+    uniform vec2 u_pos;
+    uniform vec2 u_size;
+    attribute vec2 v_pos;
+    attribute vec2 i_pos;
 
     void main() {
-      gl_Position = vec4(pos, 0, 1);
+      gl_Position = vec4(u_pos + (v_pos + i_pos) / u_size, 0, 1);
     }
   `;
-
   const frag_shader = `
     void main() {
       gl_FragColor = vec4(1, 0, 0, 1);
     }
   `;
-
 
   const canvas = document.getElementById("casein-canvas");
   const gl = canvas.getContext("webgl");
@@ -40,11 +41,14 @@
     console.error(gl.getProgramInfoLog(prog));
   }
 
-  v_array = new Float32Array([ -0.5, -0.5, 0, 0.5, 0.5, -0.5 ]);
+  v_array = new Float32Array([ 1, 1, -1, 1, 1, -1, 1, -1, -1, 1, -1, -1 ]);
 
   v_buf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, v_buf);
   gl.bufferData(gl.ARRAY_BUFFER, v_array, gl.STATIC_DRAW);
+
+  const u_pos = gl.getUniformLocation(prog, "u_pos");
+  const u_size = gl.getUniformLocation(prog, "u_size");
 
   function animate() {
     gl.viewport(0, 0, canvas.width, canvas.height);
@@ -52,12 +56,15 @@
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     gl.useProgram(prog);
-    gl.bindBuffer(gl.ARRAY_BUFFER, v_buf);
 
+    gl.uniform2fv(u_pos, [ 0, 0 ]);
+    gl.uniform2fv(u_size, [ 8, 8 ]);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, v_buf);
     gl.enableVertexAttribArray(0);
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
   }
   requestAnimationFrame(animate);
 }();
