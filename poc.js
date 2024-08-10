@@ -18,6 +18,8 @@
   const canvas = document.getElementById("casein-canvas");
   const gl = canvas.getContext("webgl");
 
+  const ext = gl.getExtension("ANGLE_instanced_arrays");
+
   const prog = gl.createProgram();
 
   const vert = gl.createShader(gl.VERTEX_SHADER);
@@ -42,10 +44,15 @@
   }
 
   v_array = new Float32Array([ 1, 1, -1, 1, 1, -1, 1, -1, -1, 1, -1, -1 ]);
+  i_array = new Float32Array([ -1, -1, 2, 3 ]);
 
   v_buf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, v_buf);
   gl.bufferData(gl.ARRAY_BUFFER, v_array, gl.STATIC_DRAW);
+
+  i_buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, i_buf);
+  gl.bufferData(gl.ARRAY_BUFFER, i_array, gl.STATIC_DRAW);
 
   const u_pos = gl.getUniformLocation(prog, "u_pos");
   const u_size = gl.getUniformLocation(prog, "u_size");
@@ -64,7 +71,12 @@
     gl.enableVertexAttribArray(0);
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    gl.bindBuffer(gl.ARRAY_BUFFER, i_buf);
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0);
+    ext.vertexAttribDivisorANGLE(1, 1);
+
+    ext.drawArraysInstancedANGLE(gl.TRIANGLES, 0, 6, 2);
   }
   requestAnimationFrame(animate);
 }();
